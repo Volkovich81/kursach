@@ -39,7 +39,7 @@ jobs:
           # Используем 7z
           & "C:\Program Files\7-Zip\7z.exe" x build-wrapper.zip -o"build-wrapper-temp" -y
 
-          # ✅ ФИНАЛЬНОЕ РЕШЕНИЕ: Найти единственный файл и переименовать его
+          # ✅ ФИНАЛЬНОЕ РЕШЕНИЕ: Найти единственный файл и ПЕРЕМЕСТИТЬ его
           $foundFiles = Get-ChildItem -Path build-wrapper-temp -Recurse -File
 
           if ($foundFiles.Count -ne 1) {
@@ -49,16 +49,16 @@ jobs:
               throw "Unexpected number of files in wrapper zip."
           }
 
-          # Мы нашли ОДИН файл. Теперь мы его переименуем.
+          # Мы нашли ОДИН файл. Теперь мы его ПЕРЕМЕСТИМ в корень и назовем bw.exe
           $originalPath = $foundFiles[0].FullName
-          $targetPath = "build-wrapper-temp\build-wrapper.exe"
+          $targetPath = "bw.exe"
 
-          Rename-Item -Path $originalPath -NewName $targetPath -Force
+          Move-Item -Path $originalPath -Destination $targetPath -Force
 
           # Проверка
-          if (-not (Test-Path $targetPath)) { throw "Rename failed." }
+          if (-not (Test-Path $targetPath)) { throw "Move failed." }
 
-          Write-Host "SUCCESS: Renamed to $targetPath"
+          Write-Host "SUCCESS: Build Wrapper is now at $targetPath"
           Write-Host "BW_PATH=$targetPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
           # 2. СКАЧИВАНИЕ И УСТАНОВКА SONAR SCANNER CLI (без изменений)
@@ -73,7 +73,7 @@ jobs:
       # 2. ШАГ СБОРКИ: Запуск Build Wrapper и MSBuild
       - name: Run Build Wrapper and MSBuild
         run: |
-          $bwPath = "${{ steps.setup_tools.outputs.BW_PATH }}"
+          $bwPath = "${{ steps.setup_tools.outputs.BW_PATH }}" # Это теперь просто bw.exe
           
           # Запускаем Build Wrapper для отслеживания MSBuild
           & "$bwPath" --out-dir bw-output msbuild kursach.sln /t:Rebuild /p:Configuration=Release /p:Platform=x64
