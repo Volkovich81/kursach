@@ -34,19 +34,15 @@ jobs:
           Write-Host "Downloading Build Wrapper from $url"
           Invoke-WebRequest -Uri $url -OutFile build-wrapper.zip
 
-          # 1. Распаковываем в корень репозитория (самый надежный способ для CI)
+          # 1. Распаковываем в корень репозитория
           Expand-Archive -Path build-wrapper.zip -DestinationPath . -Force
 
-          # 2. Указываем путь к папке вручную (потому что мы знаем ее имя!)
-          $bwDir = Get-ChildItem -Path . -Filter "build-wrapper-win-x86*" -Directory | Select-Object -First 1
-          if ($bwDir -eq $null) { throw "Root build-wrapper directory not found." }
-
-          # 3. Находим исполняемый файл внутри найденной папки. 
-          # Мы предполагаем, что он находится внутри одной вложенной папки (это стандарт Sonar)
-          $wrapperPath = Get-ChildItem -Path $bwDir.FullName -Recurse -Filter "build-wrapper.exe" | Select-Object -First 1
+          # 2. ✅ Самый надежный способ: Ищем исполняемый файл с самого корня репозитория
+          # Это обойдет все промежуточные папки.
+          $wrapperPath = Get-ChildItem -Path . -Recurse -Filter "build-wrapper.exe" | Select-Object -First 1
 
           if ($wrapperPath -eq $null) {
-            throw "build-wrapper.exe not found inside $($bwDir.FullName). Check path."
+            throw "build-wrapper.exe not found ANYWHERE in the repository."
           }
 
           # Сохраняем путь для использования в следующем шаге
