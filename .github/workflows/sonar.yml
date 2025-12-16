@@ -50,7 +50,7 @@ jobs:
           
           echo "Build Wrapper successfully created output."
 
-     # 2. АНАЛИЗ: Запуск Sonar Scanner (С ДОБАВЛЕНИЕМ ГЛАВНОЙ ВЕТКИ)
+      # 2. АНАЛИЗ: Запуск Sonar Scanner
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2.2.0
         env:
@@ -63,6 +63,6 @@ jobs:
             -Dsonar.cfamily.build-wrapper-output=${{ env.BUILD_WRAPPER_OUTPUT }}
             -Dsonar.sourceEncoding=UTF-8
             -Dsonar.sources=${{ env.SONAR_SOURCES }}
-            # 💡 НОВОЕ ИСПРАВЛЕНИЕ: ПРИНУДИТЕЛЬНО УКАЗЫВАЕМ ГЛАВНУЮ ВЕТКУ ПРИ ПЕРВОМ ЗАПУСКЕ
+            # 💡 ФИНАЛЬНЫЕ АРГУМЕНТЫ ДЛЯ ПРИВЯЗКИ
+            -Dsonar.pullrequest.github.repository=${{ github.repository }} 
             -Dsonar.branch.name=main
-            -Dsonar.branch.target=main
