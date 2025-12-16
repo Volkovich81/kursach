@@ -36,16 +36,24 @@ jobs:
           $bw_url = "https://sonarcloud.io/static/cpp/build-wrapper-win-x86.zip"
           Invoke-WebRequest -Uri $bw_url -OutFile build-wrapper.zip
 
-          # ✅ ИСПОЛЬЗУЕМ 7Z (7-ZIP) ВМЕСТО EXPAND-ARCHIVE ДЛЯ ГАРАНТИРОВАННОЙ РАСПАКОВКИ
-          # Распаковываем в папку build-wrapper-temp
+          # Используем 7z
           & "C:\Program Files\7-Zip\7z.exe" x build-wrapper.zip -o"build-wrapper-temp" -y
 
-          # Находим путь к Build Wrapper (самый надежный поиск после 7z)
-          $wrapperPath = Get-ChildItem -Path build-wrapper-temp -Recurse -Filter "build-wrapper.exe" | Select-Object -First 1
-          if ($wrapperPath -eq $null) { throw "build-wrapper.exe not found even after 7z extraction." }
-          Write-Host "BW_PATH=$($wrapperPath.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          # ✅ ФИНАЛЬНЫЙ ПОИСК: Ищем файл по имени 'build-wrapper' (без .exe)
+          $wrapperFile = Get-ChildItem -Path build-wrapper-temp -Recurse -Filter "build-wrapper" | Select-Object -First 1
 
-          # 2. СКАЧИВАНИЕ И УСТАНОВКА SONAR SCANNER CLI
+          if ($wrapperFile -eq $null) { throw "Build Wrapper binary not found." }
+
+          # Убедимся, что путь заканчивается на .exe для Windows
+          $wrapperPath = $wrapperFile.FullName
+          if ($wrapperFile.Extension -ne ".exe") {
+             # Если расширения нет, добавим его, так как на Windows нужно .exe
+             $wrapperPath = $wrapperPath + ".exe"
+          }
+
+          Write-Host "BW_PATH=$wrapperPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+          # 2. СКАЧИВАНИЕ И УСТАНОВКА SONAR SCANNER CLI (без изменений)
           $scanner_url = "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-windows.zip"
           Invoke-WebRequest -Uri $scanner_url -OutFile sonar-scanner.zip
           & "C:\Program Files\7-Zip\7z.exe" x sonar-scanner.zip -o"." -y
