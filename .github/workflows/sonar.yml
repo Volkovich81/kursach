@@ -37,8 +37,8 @@ jobs:
           # Распаковываем в папку 'bw-temp'
           Expand-Archive -Path build-wrapper.zip -DestinationPath bw-temp -Force
 
-          # Находим точное местоположение и сохраняем его в переменную среды GITHUB ACTIONS
-          $wrapperPath = Get-ChildItem -Path bw-temp -Recurse -Filter "build-wrapper.exe" | Select-Object -First 1
+          # ✅ ИСПОЛЬЗУЕМ DIR (более низкоуровневую команду) ДЛЯ ПОИСКА ИСПОЛНЯЕМОГО ФАЙЛА
+          $wrapperPath = dir -Path bw-temp -Recurse -Filter "build-wrapper.exe" | Select-Object -First 1
           if ($wrapperPath -eq $null) { throw "build-wrapper.exe not found." }
 
           # Сохраняем путь для использования в следующем шаге
