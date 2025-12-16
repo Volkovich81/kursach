@@ -1,0 +1,41 @@
+# Visual Studio / IDE Files
+*.sln
+*.suo
+*.user
+*.userprefs
+*.v12.suo
+*.v14.suo
+*.v15.suo
+*.v16.suo
+*.v17.suo
+
+# Временные файлы и базы данных
+*.pdb
+*.ilk
+*.tlog
+*.idb
+*.ipch
+*.aps
+*.ncb
+
+# Папки и файлы сборки
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+bin/
+obj/
+*.exe
+*.dll
+*.obj
+*.lib
+
+# Артефакты сборки Qt
+moc_*.cpp
+ui_*.h
+*_automoc.*
+*_autogen/
+*.pro.user
+
+# Visual Studio caches and temporary files
+.vs/
