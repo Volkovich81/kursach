@@ -1,0 +1,59 @@
+name: C++ SonarCloud Analysis
+
+on:
+  push:
+    branches:  
+      - main  
+         pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  sonarcloud:
+    name: SonarCloud Scan
+    runs-on: windows-latest # Используем Windows, так как это проект на MSBuild/Qt
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Необходимо для анализа истории и PR
+
+      - name: Setup Java for SonarScanner
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup MSBuild (Visual Studio build environment)
+        # Это добавляет необходимые переменные среды для компиляции C++
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Download Build Wrapper
+        # Скачиваем Build Wrapper, необходимый для анализа C++
+        run: |
+          $url = "https://sonarcloud.io/static/cpp/build-wrapper-win-x86.zip"
+          Write-Host "Downloading Build Wrapper from $url"
+          Invoke-WebRequest -Uri $url -OutFile build-wrapper.zip
+          Expand-Archive -Path build-wrapper.zip -DestinationPath . -Force
+          
+      - name: Run Build Wrapper and MSBuild
+        # Ищем папку build-wrapper и оборачиваем команду сборки (msbuild)
+        run: |
+          $buildWrapperDir = Get-ChildItem -Path . -Filter "build-wrapper*" -Directory | Select-Object -First 1
+          if ($buildWrapperDir -eq $null) { throw "Build Wrapper directory not found." }
+          
+          # ★★★ ОЧЕНЬ ВАЖНО: Замените 'kursach.sln' на точное имя вашего SLN-файла!
+          & "$($buildWrapperDir.FullName)\build-wrapper.exe" --out-dir bw-output msbuild kursach.sln /t:Rebuild /p:Configuration=Release /p:Platform=x64
+          
+      - name: SonarCloud Analysis
+        # Запуск сканера и отправка данных
+        uses: SonarSource/sonarcloud-github-action@v2.4.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Секрет из настроек репозитория
+        with:
+          args: >
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} # Секрет из настроек репозитория
+            -Dsonar.projectKey=kursach
+            -Dsonar.cfamily.build-wrapper-output=bw-output
+            -Dsonar.sourceEncoding=UTF-8
