@@ -34,24 +34,19 @@ jobs:
           Write-Host "Downloading Build Wrapper from $url"
           Invoke-WebRequest -Uri $url -OutFile build-wrapper.zip
 
-          # 1. Распаковываем в папку 'bw-temp'
-          Expand-Archive -Path build-wrapper.zip -DestinationPath bw-temp -Force
+          # 1. Распаковываем в корень репозитория (самый надежный способ для CI)
+          Expand-Archive -Path build-wrapper.zip -DestinationPath . -Force
 
-          # 2. Выводим все содержимое для отладки
-          Write-Host "Listing contents of bw-temp:"
-          Get-ChildItem -Path bw-temp -Recurse | Select-Object FullName
+          # 2. Указываем путь к папке вручную (потому что мы знаем ее имя!)
+          $bwDir = Get-ChildItem -Path . -Filter "build-wrapper-win-x86*" -Directory | Select-Object -First 1
+          if ($bwDir -eq $null) { throw "Root build-wrapper directory not found." }
 
-          # 3. ИСПОЛЬЗУЕМ Get-ChildItem С ПОЛНОЙ ПАПКОЙ (самый надежный путь)
-          # Это предполагает, что первая папка называется build-wrapper-win-x86
-          $wrapperPath = Get-ChildItem -Path bw-temp\build-wrapper-win-x86 -Recurse -Filter "build-wrapper.exe" | Select-Object -First 1
-
-          if ($wrapperPath -eq $null) {
-            # Если не найдено, ищем еще раз без указания первой папки (на всякий случай)
-            $wrapperPath = Get-ChildItem -Path bw-temp -Recurse -Filter "build-wrapper.exe" | Select-Object -First 1
-          }
+          # 3. Находим исполняемый файл внутри найденной папки. 
+          # Мы предполагаем, что он находится внутри одной вложенной папки (это стандарт Sonar)
+          $wrapperPath = Get-ChildItem -Path $bwDir.FullName -Recurse -Filter "build-wrapper.exe" | Select-Object -First 1
 
           if ($wrapperPath -eq $null) {
-            throw "build-wrapper.exe not found. Check the output above for file paths."
+            throw "build-wrapper.exe not found inside $($bwDir.FullName). Check path."
           }
 
           # Сохраняем путь для использования в следующем шаге
