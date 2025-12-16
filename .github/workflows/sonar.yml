@@ -36,27 +36,22 @@ jobs:
           $bw_url = "https://sonarcloud.io/static/cpp/build-wrapper-win-x86.zip"
           Invoke-WebRequest -Uri $bw_url -OutFile build-wrapper.zip
           Expand-Archive -Path build-wrapper.zip -DestinationPath . -Force
-
-          # ✅ ИСПОЛЬЗУЕМ ДВОЙНОЙ ПОИСК ДЛЯ ГАРАНТИИ
-          # 1. Сначала ищем в стандартной папке
-          $bwDir = Get-ChildItem -Path . -Filter "build-wrapper-win-x86*" -Directory | Select-Object -First 1
-          if ($bwDir -ne $null) {
-            $wrapperPath = Get-ChildItem -Path $bwDir.FullName -Recurse -Filter "build-wrapper.exe" | Select-Object -First 1
-          }
-
-          # 2. Если не найдено, ищем с самого корня (как делали раньше)
-          if ($wrapperPath -eq $null) {
-             $wrapperPath = Get-ChildItem -Path . -Recurse -Filter "build-wrapper.exe" | Select-Object -First 1
-          }
-
-          if ($wrapperPath -eq $null) { throw "build-wrapper.exe not found after install. Final attempt failed." }
-          Write-Host "BW_PATH=$($wrapperPath.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-
-          # Скачивание Sonar Scanner CLI (остается без изменений)
+          
+          # 🚨 ОТЛАДКА: ВЫВОДИМ ВСЕ ПУТИ
+          Write-Host "--- DEBUG: ALL FILES IN REPO ---"
+          # Выводим все файлы рекурсивно, чтобы найти build-wrapper.exe
+          Get-ChildItem -Path . -Recurse | Select-Object FullName
+          Write-Host "--- END DEBUG ---"
+          
+          # Временно отключаем проверку, чтобы скрипт прошел дальше
+          $wrapperPath = "" # Мы найдем его вручную
+          if ($wrapperPath -eq "") { throw "DEBUG MODE: Path will be copied manually from output above." }
+          
+          # Оставшаяся часть кода (для Sonar Scanner)
           $scanner_url = "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-windows.zip"
           Invoke-WebRequest -Uri $scanner_url -OutFile sonar-scanner.zip
           Expand-Archive -Path sonar-scanner.zip -DestinationPath . -Force
-
+          
           $scannerDir = Get-ChildItem -Path . -Filter "sonar-scanner-cli-*" -Directory | Select-Object -First 1
           if ($scannerDir -eq $null) { throw "Sonar Scanner directory not found." }
           Write-Host "SCANNER_PATH=$($scannerDir.FullName)\bin\sonar-scanner.bat" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
