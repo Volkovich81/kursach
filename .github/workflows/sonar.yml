@@ -10,6 +10,8 @@ on:
 jobs:
   sonarcloud:
     name: SonarCloud Scan
+    # ✅ Обязательное свойство
+    runs-on: windows-latest
 
     steps:
       - name: Checkout code
@@ -25,31 +27,33 @@ jobs:
 
       - name: Setup MSBuild (Visual Studio build environment)
         uses: microsoft/setup-msbuild@v2
-          
-      - name: Build and Scan
-        uses: SonarSource/sonarcloud-github-action@v2.2.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: >
-            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
-            -Dsonar.projectKey=kursach
-            -Dsonar.cfamily.build-wrapper-output=bw-output
-            -Dsonar.sourceEncoding=UTF-8
-            
-            # 💡 КОМАНДА ЗАПУСКА BUILD WRAPPER 💡
-            # Эта команда выполнится внутри экшена, который сам найдет build-wrapper.exe
-            sonar.cfamily.build-wrapper-command=D:\a\kursach\kursach\build-wrapper.exe --out-dir bw-output msbuild kursach.sln /t:Rebuild /p:Configuration=Release /p:Platform=x64
 
-      - name: SonarCloud Analysis
+      # 1. ШАГ ПОДГОТОВКИ: Скачивание Sonar Scanner и Build Wrapper
+      - name: SonarScanner Begin
         uses: SonarSource/sonarcloud-github-action@v2.2.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        id: scanner-begin
         with:
           args: >
+            -Dsonar.host.url=https://sonarcloud.io
             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
             -Dsonar.projectKey=kursach
             -Dsonar.cfamily.build-wrapper-output=bw-output
-            -Dsonar.sourceEncoding=UTF-8
+
+      # 2. ШАГ СБОРКИ: Запуск Build Wrapper и MSBuild
+      - name: Run Build Wrapper and MSBuild
+        run: |
+          # Используем путь к Build Wrapper, установленный экшеном SonarSource
+          $bwPath = "${{ steps.scanner-begin.outputs.build-wrapper-home }}" + "\build-wrapper.exe"
+          
+          if (-not (Test-Path $bwPath)) { throw "build-wrapper.exe not found at standard path." }
+          
+          # Запускаем Build Wrapper для отслеживания MSBuild
+          & "$bwPath" --out-dir bw-output msbuild kursach.sln /t:Rebuild /p:Configuration=Release /p:Platform=x64
+
+      # 3. ШАГ ОТПРАВКИ: Запуск анализа
+      - name: SonarScanner End
+        uses: SonarSource/sonarcloud-github-action@v2.2.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: end
