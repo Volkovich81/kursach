@@ -76,9 +76,14 @@ jobs:
       # 2. ШАГ СБОРКИ: Запуск Build Wrapper и MSBuild
       - name: Run Build Wrapper and MSBuild
         run: |
-          $bwPath = "${{ steps.setup_tools.outputs.BW_PATH }}" # Это теперь просто bw.exe
+          # ВАЖНО: Мы берем путь BW_PATH, который был сохранен как 'bw.exe' в предыдущем шаге
+          $bwPath = "${{ steps.setup_tools.outputs.BW_PATH }}"
           
+          # Проверка на всякий случай
+          if (-not (Test-Path $bwPath)) { throw "Build Wrapper not found at final path: $bwPath" }
+
           # Запускаем Build Wrapper для отслеживания MSBuild
+          # $bwPath теперь равен "bw.exe"
           & "$bwPath" --out-dir bw-output msbuild kursach.sln /t:Rebuild /p:Configuration=Release /p:Platform=x64
 
       # 3. ШАГ ОТПРАВКИ: Запуск анализа
