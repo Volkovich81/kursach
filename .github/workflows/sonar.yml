@@ -12,7 +12,7 @@ jobs:
     name: SonarCloud Scan
     # ✅ Ключевое изменение: используем Linux (ubuntu)
     runs-on: ubuntu-latest
-    
+  
     env:
       BUILD_DIR: build_sonar
       BUILD_WRAPPER_OUTPUT: bw_output
@@ -63,3 +63,5 @@ jobs:
             -Dsonar.cfamily.build-wrapper-output=${{ env.BUILD_WRAPPER_OUTPUT }}
             -Dsonar.sourceEncoding=UTF-8
             -Dsonar.sources=${{ env.SONAR_SOURCES }}
+            -Dsonar.pullrequest.github.repository=${{ github.repository }} 
+            -Dsonar.branch.name=${{ github.ref_name }}
