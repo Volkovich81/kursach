@@ -26,40 +26,22 @@ jobs:
 
       - name: Setup MSBuild (Visual Studio build environment)
         uses: microsoft/setup-msbuild@v2
-
-      - name: Download Build Wrapper
-        id: find_wrapper
-        run: |
-          $url = "https://sonarcloud.io/static/cpp/build-wrapper-win-x86.zip"
-          Write-Host "Downloading Build Wrapper from $url"
-          Invoke-WebRequest -Uri $url -OutFile build-wrapper.zip
-
-          # 1. Распаковываем в корень репозитория
-          Expand-Archive -Path build-wrapper.zip -DestinationPath . -Force
-
-          # 2. ✅ Самый надежный способ: Ищем исполняемый файл с самого корня репозитория
-          # Это обойдет все промежуточные папки.
-          $wrapperPath = Get-ChildItem -Path . -Recurse -Filter "build-wrapper.exe" | Select-Object -First 1
-
-          if ($wrapperPath -eq $null) {
-            throw "build-wrapper.exe not found ANYWHERE in the repository."
-          }
-
-          # Сохраняем путь для использования в следующем шаге
-          Write-Host "Found wrapper at: $($wrapperPath.FullName)"
-          Write-Host "BUILD_WRAPPER_PATH=$($wrapperPath.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           
-      - name: Run Build Wrapper and MSBuild
-        run: |
-          # Используем сохраненный путь напрямую
-          $wrapperPath = "${{ steps.find_wrapper.outputs.BUILD_WRAPPER_PATH }}"
-
-          # Проверка на всякий случай
-          if (-not (Test-Path $wrapperPath)) { throw "Build Wrapper not found at final path: $wrapperPath" }
-
-          # Запускаем Build Wrapper, используя абсолютный путь и оборачивая msbuild
-          # ★★★ ОЧЕНЬ ВАЖНО: Проверьте, что имя SLN-файла 'kursach.sln' правильное!
-          & "$wrapperPath" --out-dir bw-output msbuild kursach.sln /t:Rebuild /p:Configuration=Release /p:Platform=x64
+      - name: Build and Scan
+        uses: SonarSource/sonarcloud-github-action@v2.2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+            -Dsonar.projectKey=kursach
+            -Dsonar.cfamily.build-wrapper-output=bw-output
+            -Dsonar.sourceEncoding=UTF-8
+            
+            # 💡 КОМАНДА ЗАПУСКА BUILD WRAPPER 💡
+            # Эта команда выполнится внутри экшена, который сам найдет build-wrapper.exe
+            sonar.cfamily.build-wrapper-command=D:\a\kursach\kursach\build-wrapper.exe --out-dir bw-output msbuild kursach.sln /t:Rebuild /p:Configuration=Release /p:Platform=x64
 
       - name: SonarCloud Analysis
         uses: SonarSource/sonarcloud-github-action@v2.2.0
