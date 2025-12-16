@@ -10,7 +10,6 @@ on:
 jobs:
   sonarcloud:
     name: SonarCloud Scan
-    runs-on: windows-latest
 
     steps:
       - name: Checkout code
