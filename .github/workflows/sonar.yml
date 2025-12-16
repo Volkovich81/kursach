@@ -1,4 +1,4 @@
-name: C++ SonarCloud Analysis
+name: C++ SonarCloud Analysis (CMake/Linux)
 
 on:
   push:
@@ -8,71 +8,52 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  sonarcloud:
+  build-and-scan:
     name: SonarCloud Scan
-    runs-on: windows-latest
+    # ✅ Ключевое изменение: используем Linux (ubuntu)
+    runs-on: ubuntu-latest
+    
+    env:
+      BUILD_DIR: build_sonar
+      BUILD_WRAPPER_OUTPUT: bw_output
+      # Указываем Sonar, где искать исходники (корневой каталог)
+      SONAR_SOURCES: . 
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup Java for SonarScanner
-        uses: actions/setup-java@v4
+      # Устанавливаем Build Wrapper
+      - name: Install Build Wrapper
+        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v4
+
+      # 1. СБОРКА: Настраиваем CMake и запускаем Build Wrapper
+      - name: Run CMake and Build Wrapper
+        run: |
+          echo "Starting CMake build and wrapping process..."
+          rm -rf ${{ env.BUILD_DIR }}
+          mkdir -p ${{ env.BUILD_DIR }}
+          
+          # 1. Настройка CMake
+          cmake -S . -B ${{ env.BUILD_DIR }}
+          
+          # 2. Запуск Build Wrapper для отслеживания сборки
+          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUTPUT }} cmake --build ${{ env.BUILD_DIR }} --config Release
+          
+          echo "Build Wrapper successfully created output."
+
+      # 2. АНАЛИЗ: Запуск Sonar Scanner
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2.2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Setup MSBuild (Visual Studio build environment)
-        uses: microsoft/setup-msbuild@v2
-
-      # 1. СКАЧИВАНИЕ И УСТАНОВКА ИНСТРУМЕНТОВ
-      - name: Download Build Wrapper and Sonar Scanner
-        id: setup_tools
-        run: |
-          # 1. BUILD WRAPPER: Скачивание, 7z-распаковка и перемещение в bw.exe
-          $bw_url = "https://sonarcloud.io/static/cpp/build-wrapper-win-x86.zip"
-          Invoke-WebRequest -Uri $bw_url -OutFile build-wrapper.zip
-          & "C:\Program Files\7-Zip\7z.exe" x build-wrapper.zip -o"build-wrapper-temp" -y
-          
-          $foundFiles = Get-ChildItem -Path build-wrapper-temp -Recurse -File
-          if ($foundFiles.Count -ne 1) { throw "Unexpected number of files in wrapper zip." }
-          
-          Move-Item -Path $foundFiles[0].FullName -Destination "bw.exe" -Force
-          if (-not (Test-Path "bw.exe")) { throw "Move failed." }
-          
-          Write-Host "BW_PATH=bw.exe" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-
-          # 2. SONAR SCANNER CLI: Скачивание и 7z-распаковка
-          $scanner_url = "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-windows.zip"
-          Invoke-WebRequest -Uri $scanner_url -OutFile sonar-scanner.zip
-          & "C:\Program Files\7-Zip\7z.exe" x sonar-scanner.zip -o"." -y
-          
-          # ✅ НОВЫЙ ФИНАЛЬНЫЙ ПОИСК SONAR SCANNER: Ищем любую папку, которая начинается с 'sonar-scanner-'
-          $scannerDir = Get-ChildItem -Path . -Directory | Where-Object { $_.Name -like "sonar-scanner-*" } | Select-Object -First 1
-          
-          if ($scannerDir -eq $null) { throw "FATAL: Sonar Scanner directory not found. Cannot proceed." }
-          Write-Host "SCANNER_PATH=$($scannerDir.FullName)\bin\sonar-scanner.bat" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-
-      # 2. ШАГ СБОРКИ: Запуск Build Wrapper и MSBuild
-      - name: Run Build Wrapper and MSBuild
-        run: |
-          # ПУТЬ БЕРЕТСЯ ИЗ ПРЕДЫДУЩЕГО ШАГА!
-          $bwPath = "${{ steps.setup_tools.outputs.BW_PATH }}"
-          
-          # Запускаем Build Wrapper для отслеживания MSBuild
-          & "$bwPath" --out-dir bw-output msbuild kursach.sln /t:Rebuild /p:Configuration=Release /p:Platform=x64
-          
-      # 3. ШАГ ОТПРАВКИ: Запуск анализа Sonar Scanner
-      - name: SonarScanner Analysis
-        run: |
-          $scannerPath = "${{ steps.setup_tools.outputs.SCANNER_PATH }}"
-          
-          # Запускаем анализ
-          & "$scannerPath" `
-            -Dsonar.host.url=https://sonarcloud.io `
-            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} `
-            -Dsonar.projectKey=kursach `
-            -Dsonar.cfamily.build-wrapper-output=bw-output `
-            -Dsonar.token=${{ secrets.SONAR_TOKEN }}
+          args: >
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+            -Dsonar.projectKey=kursach
+            -Dsonar.cfamily.build-wrapper-output=${{ env.BUILD_WRAPPER_OUTPUT }}
+            -Dsonar.sourceEncoding=UTF-8
+            -Dsonar.sources=${{ env.SONAR_SOURCES }}
