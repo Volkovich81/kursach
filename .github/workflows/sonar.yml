@@ -36,25 +36,25 @@ jobs:
           Expand-Archive -Path build-wrapper.zip -DestinationPath bw-temp -Force
 
       - name: Run Build Wrapper and MSBuild
-    run: |
-      # 1. Находим точное местоположение build-wrapper.exe
-      $wrapperPath = Get-ChildItem -Path bw-temp -Recurse -Filter "build-wrapper.exe" | Select-Object -First 1
-      if ($wrapperPath -eq $null) { throw "build-wrapper.exe not found." }
+        run: |
+          # 1. Находим точное местоположение build-wrapper.exe
+          $wrapperPath = Get-ChildItem -Path bw-temp -Recurse -Filter "build-wrapper.exe" | Select-Object -First 1
+          if ($wrapperPath -eq $null) { throw "build-wrapper.exe not found." }
 
-      # 2. Получаем родительскую папку (там, где лежит build-wrapper.exe)
-      $wrapperDir = $wrapperPath.Directory.FullName
-      Write-Host "Wrapper Directory: $wrapperDir"
+          # 2. Получаем родительскую папку (там, где лежит build-wrapper.exe)
+          $wrapperDir = $wrapperPath.Directory.FullName
+          Write-Host "Wrapper Directory: $wrapperDir"
 
-      # 3. Переходим в папку с Build Wrapper-ом, чтобы избежать ошибок пути
-      Set-Location $wrapperDir
+          # 3. Переходим в папку с Build Wrapper-ом, чтобы избежать ошибок пути
+          Set-Location $wrapperDir
 
-      # 4. Запускаем Build Wrapper, оборачивая msbuild (используем относительный путь к SLN)
-      # ★★★ ОЧЕНЬ ВАЖНО: Проверьте, что имя SLN-файла 'kursach.sln' правильное!
-      & ".\build-wrapper.exe" --out-dir ..\bw-output msbuild ..\kursach.sln /t:Rebuild /p:Configuration=Release /p:Platform=x64
+          # 4. Запускаем Build Wrapper, оборачивая msbuild (используем относительный путь к SLN)
+          # ★★★ ОЧЕНЬ ВАЖНО: Проверьте, что имя SLN-файла 'kursach.sln' правильное!
+          & ".\build-wrapper.exe" --out-dir ..\bw-output msbuild ..\kursach.sln /t:Rebuild /p:Configuration=Release /p:Platform=x64
+          
+          # Возвращаемся в корневой каталог
+          Set-Location $env:GITHUB_WORKSPACE
 
-      # Возвращаемся в корневой каталог
-      Set-Location $env:GITHUB_WORKSPACE
-         
       - name: SonarCloud Analysis
         uses: SonarSource/sonarcloud-github-action@v2.2.0
         env:
