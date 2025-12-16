@@ -36,12 +36,13 @@ jobs:
 
       - name: Run Build Wrapper and MSBuild
         run: |
-          $buildWrapperDir = Get-ChildItem -Path . -Filter "build-wrapper*" -Directory | Select-Object -First 1
-          if ($buildWrapperDir -eq $null) { throw "Build Wrapper directory not found." }
+         # Мы знаем, что папка называется build-wrapper-win-x86. Ищем внутри нее исполняемый файл.
+         $wrapperPath = Get-ChildItem -Path build-wrapper-win-x86 -Recurse -Filter "build-wrapper.exe" | Select-Object -First 1
+         if ($wrapperPath -eq $null) { throw "build-wrapper.exe not found in build-wrapper-win-x86." }
 
-          # ★★★ ОЧЕНЬ ВАЖНО: Замените 'kursach.sln' на точное имя вашего SLN-файла!
-          & "$($buildWrapperDir.FullName)\build-wrapper.exe" --out-dir bw-output msbuild kursach.sln /t:Rebuild /p:Configuration=Release /p:Platform=x64
-
+         # ★★★ ОЧЕНЬ ВАЖНО: Замените 'kursach.sln' на точное имя вашего SLN-файла!
+         & "$($wrapperPath.FullName)" --out-dir bw-output msbuild kursach.sln /t:Rebuild /p:Configuration=Release /p:Platform=x64
+         
       - name: SonarCloud Analysis
         uses: SonarSource/sonarcloud-github-action@v2.2.0
         env:
