@@ -10,7 +10,7 @@ on:
 jobs:
   sonarcloud:
     name: SonarCloud Scan
-    # ✅ Обязательное свойство
+    # ✅ Используем Windows, чтобы собрать проект MSBuild
     runs-on: windows-latest
 
     steps:
@@ -28,32 +28,47 @@ jobs:
       - name: Setup MSBuild (Visual Studio build environment)
         uses: microsoft/setup-msbuild@v2
 
-      # 1. ШАГ ПОДГОТОВКИ: Скачивание Sonar Scanner и Build Wrapper
-      - name: SonarScanner Begin
-        uses: SonarSource/sonarcloud-github-action@v2.2.0
-        id: scanner-begin
-        with:
-          args: >
-            -Dsonar.host.url=https://sonarcloud.io
-            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
-            -Dsonar.projectKey=kursach
-            -Dsonar.cfamily.build-wrapper-output=bw-output
+      # 1. СКАЧИВАНИЕ И УСТАНОВКА ИНСТРУМЕНТОВ ВРУЧНУЮ
+      - name: Download Build Wrapper and Sonar Scanner
+        id: setup_tools
+        run: |
+          # Скачивание Build Wrapper
+          $bw_url = "https://sonarcloud.io/static/cpp/build-wrapper-win-x86.zip"
+          Invoke-WebRequest -Uri $bw_url -OutFile build-wrapper.zip
+          Expand-Archive -Path build-wrapper.zip -DestinationPath . -Force
+          
+          # Находим путь к Build Wrapper (самый надежный поиск)
+          $wrapperPath = Get-ChildItem -Path . -Recurse -Filter "build-wrapper.exe" | Select-Object -First 1
+          if ($wrapperPath -eq $null) { throw "build-wrapper.exe not found after install." }
+          Write-Host "BW_PATH=$($wrapperPath.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
+          # Скачивание Sonar Scanner CLI
+          $scanner_url = "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-windows.zip"
+          Invoke-WebRequest -Uri $scanner_url -OutFile sonar-scanner.zip
+          Expand-Archive -Path sonar-scanner.zip -DestinationPath . -Force
+          
+          # Находим путь к Sonar Scanner
+          $scannerDir = Get-ChildItem -Path . -Filter "sonar-scanner-cli-*" -Directory | Select-Object -First 1
+          if ($scannerDir -eq $null) { throw "Sonar Scanner directory not found." }
+          Write-Host "SCANNER_PATH=$($scannerDir.FullName)\bin\sonar-scanner.bat" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+      
       # 2. ШАГ СБОРКИ: Запуск Build Wrapper и MSBuild
       - name: Run Build Wrapper and MSBuild
         run: |
-          # Используем путь к Build Wrapper, установленный экшеном SonarSource
-          $bwPath = "${{ steps.scanner-begin.outputs.build-wrapper-home }}" + "\build-wrapper.exe"
-          
-          if (-not (Test-Path $bwPath)) { throw "build-wrapper.exe not found at standard path." }
+          $bwPath = "${{ steps.setup_tools.outputs.BW_PATH }}"
           
           # Запускаем Build Wrapper для отслеживания MSBuild
           & "$bwPath" --out-dir bw-output msbuild kursach.sln /t:Rebuild /p:Configuration=Release /p:Platform=x64
 
       # 3. ШАГ ОТПРАВКИ: Запуск анализа
-      - name: SonarScanner End
-        uses: SonarSource/sonarcloud-github-action@v2.2.0
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: end
+      - name: SonarScanner Analysis
+        run: |
+          $scannerPath = "${{ steps.setup_tools.outputs.SCANNER_PATH }}"
+          
+          # Запускаем анализ
+          & "$scannerPath" `
+            -Dsonar.host.url=https://sonarcloud.io `
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} `
+            -Dsonar.projectKey=kursach `
+            -Dsonar.cfamily.build-wrapper-output=bw-output `
+            -Dsonar.token=${{ secrets.SONAR_TOKEN }}
