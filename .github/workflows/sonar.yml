@@ -32,16 +32,17 @@ jobs:
           $url = "https://sonarcloud.io/static/cpp/build-wrapper-win-x86.zip"
           Write-Host "Downloading Build Wrapper from $url"
           Invoke-WebRequest -Uri $url -OutFile build-wrapper.zip
-          Expand-Archive -Path build-wrapper.zip -DestinationPath . -Force
+          # ✅ Гарантированно распаковываем в папку 'bw-temp'
+          Expand-Archive -Path build-wrapper.zip -DestinationPath bw-temp -Force
 
       - name: Run Build Wrapper and MSBuild
         run: |
-         # Мы знаем, что папка называется build-wrapper-win-x86. Ищем внутри нее исполняемый файл.
-         $wrapperPath = Get-ChildItem -Path build-wrapper-win-x86 -Recurse -Filter "build-wrapper.exe" | Select-Object -First 1
-         if ($wrapperPath -eq $null) { throw "build-wrapper.exe not found in build-wrapper-win-x86." }
+          # ✅ Рекурсивно ищем build-wrapper.exe в папке 'bw-temp'
+          $wrapperPath = Get-ChildItem -Path bw-temp -Recurse -Filter "build-wrapper.exe" | Select-Object -First 1
+          if ($wrapperPath -eq $null) { throw "build-wrapper.exe not found." }
 
-         # ★★★ ОЧЕНЬ ВАЖНО: Замените 'kursach.sln' на точное имя вашего SLN-файла!
-         & "$($wrapperPath.FullName)" --out-dir bw-output msbuild kursach.sln /t:Rebuild /p:Configuration=Release /p:Platform=x64
+          # ★★★ ОЧЕНЬ ВАЖНО: Замените 'kursach.sln' на точное имя вашего SLN-файла!
+          & "$($wrapperPath.FullName)" --out-dir bw-output msbuild kursach.sln /t:Rebuild /p:Configuration=Release /p:Platform=x64
          
       - name: SonarCloud Analysis
         uses: SonarSource/sonarcloud-github-action@v2.2.0
