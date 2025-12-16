@@ -32,26 +32,24 @@ jobs:
       - name: Download Build Wrapper and Sonar Scanner
         id: setup_tools
         run: |
-          # Скачивание Build Wrapper
+          # 1. СКАЧИВАНИЕ И УСТАНОВКА BUILD WRAPPER
           $bw_url = "https://sonarcloud.io/static/cpp/build-wrapper-win-x86.zip"
           Invoke-WebRequest -Uri $bw_url -OutFile build-wrapper.zip
-          Expand-Archive -Path build-wrapper.zip -DestinationPath . -Force
-          
-          # 🚨 ОТЛАДКА: ВЫВОДИМ ВСЕ ПУТИ
-          Write-Host "--- DEBUG: ALL FILES IN REPO ---"
-          # Выводим все файлы рекурсивно, чтобы найти build-wrapper.exe
-          Get-ChildItem -Path . -Recurse | Select-Object FullName
-          Write-Host "--- END DEBUG ---"
-          
-          # Временно отключаем проверку, чтобы скрипт прошел дальше
-          $wrapperPath = "" # Мы найдем его вручную
-          if ($wrapperPath -eq "") { throw "DEBUG MODE: Path will be copied manually from output above." }
-          
-          # Оставшаяся часть кода (для Sonar Scanner)
+
+          # ✅ ИСПОЛЬЗУЕМ 7Z (7-ZIP) ВМЕСТО EXPAND-ARCHIVE ДЛЯ ГАРАНТИРОВАННОЙ РАСПАКОВКИ
+          # Распаковываем в папку build-wrapper-temp
+          & "C:\Program Files\7-Zip\7z.exe" x build-wrapper.zip -o"build-wrapper-temp" -y
+
+          # Находим путь к Build Wrapper (самый надежный поиск после 7z)
+          $wrapperPath = Get-ChildItem -Path build-wrapper-temp -Recurse -Filter "build-wrapper.exe" | Select-Object -First 1
+          if ($wrapperPath -eq $null) { throw "build-wrapper.exe not found even after 7z extraction." }
+          Write-Host "BW_PATH=$($wrapperPath.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+          # 2. СКАЧИВАНИЕ И УСТАНОВКА SONAR SCANNER CLI
           $scanner_url = "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-windows.zip"
           Invoke-WebRequest -Uri $scanner_url -OutFile sonar-scanner.zip
-          Expand-Archive -Path sonar-scanner.zip -DestinationPath . -Force
-          
+          & "C:\Program Files\7-Zip\7z.exe" x sonar-scanner.zip -o"." -y
+
           $scannerDir = Get-ChildItem -Path . -Filter "sonar-scanner-cli-*" -Directory | Select-Object -First 1
           if ($scannerDir -eq $null) { throw "Sonar Scanner directory not found." }
           Write-Host "SCANNER_PATH=$($scannerDir.FullName)\bin\sonar-scanner.bat" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
