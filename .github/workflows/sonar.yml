@@ -49,10 +49,10 @@ jobs:
           Invoke-WebRequest -Uri $scanner_url -OutFile sonar-scanner.zip
           & "C:\Program Files\7-Zip\7z.exe" x sonar-scanner.zip -o"." -y
           
-          # ✅ КОРРЕКТНЫЙ ПОИСК SONAR SCANNER: Ищем папку, содержащую "sonar-scanner-"
-          $scannerDir = Get-ChildItem -Path . -Filter "sonar-scanner-*" -Directory | Select-Object -First 1
+          # ✅ НОВЫЙ ФИНАЛЬНЫЙ ПОИСК SONAR SCANNER: Ищем любую папку, которая начинается с 'sonar-scanner-'
+          $scannerDir = Get-ChildItem -Path . -Directory | Where-Object { $_.Name -like "sonar-scanner-*" } | Select-Object -First 1
           
-          if ($scannerDir -eq $null) { throw "Sonar Scanner directory not found. Check if the directory name changed." }
+          if ($scannerDir -eq $null) { throw "FATAL: Sonar Scanner directory not found. Cannot proceed." }
           Write-Host "SCANNER_PATH=$($scannerDir.FullName)\bin\sonar-scanner.bat" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       # 2. ШАГ СБОРКИ: Запуск Build Wrapper и MSBuild
