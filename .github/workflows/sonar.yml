@@ -39,19 +39,27 @@ jobs:
           # Используем 7z
           & "C:\Program Files\7-Zip\7z.exe" x build-wrapper.zip -o"build-wrapper-temp" -y
 
-          # ✅ ФИНАЛЬНЫЙ ПОИСК: Ищем файл по имени 'build-wrapper' (без .exe)
-          $wrapperFile = Get-ChildItem -Path build-wrapper-temp -Recurse -Filter "build-wrapper" | Select-Object -First 1
+          # ✅ ФИНАЛЬНОЕ РЕШЕНИЕ: Найти единственный файл и переименовать его
+          $foundFiles = Get-ChildItem -Path build-wrapper-temp -Recurse -File
 
-          if ($wrapperFile -eq $null) { throw "Build Wrapper binary not found." }
-
-          # Убедимся, что путь заканчивается на .exe для Windows
-          $wrapperPath = $wrapperFile.FullName
-          if ($wrapperFile.Extension -ne ".exe") {
-             # Если расширения нет, добавим его, так как на Windows нужно .exe
-             $wrapperPath = $wrapperPath + ".exe"
+          if ($foundFiles.Count -ne 1) {
+              # Если файлов не 1, выводим все для отладки
+              Write-Host "FATAL ERROR: Expected 1 file, found $($foundFiles.Count)"
+              $foundFiles | Select-Object FullName
+              throw "Unexpected number of files in wrapper zip."
           }
 
-          Write-Host "BW_PATH=$wrapperPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          # Мы нашли ОДИН файл. Теперь мы его переименуем.
+          $originalPath = $foundFiles[0].FullName
+          $targetPath = "build-wrapper-temp\build-wrapper.exe"
+
+          Rename-Item -Path $originalPath -NewName $targetPath -Force
+
+          # Проверка
+          if (-not (Test-Path $targetPath)) { throw "Rename failed." }
+
+          Write-Host "SUCCESS: Renamed to $targetPath"
+          Write-Host "BW_PATH=$targetPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
           # 2. СКАЧИВАНИЕ И УСТАНОВКА SONAR SCANNER CLI (без изменений)
           $scanner_url = "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-windows.zip"
