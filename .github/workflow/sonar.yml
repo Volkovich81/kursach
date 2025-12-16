@@ -57,3 +57,4 @@ jobs:
             -Dsonar.projectKey=kursach
             -Dsonar.cfamily.build-wrapper-output=bw-output
             -Dsonar.sourceEncoding=UTF-8
+            
