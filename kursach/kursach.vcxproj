@@ -1,0 +1,149 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{2E870751-67BF-4378-BEBF-9EC6A6EA7D5B}</ProjectGuid>
+    <Keyword>QtVS_v304</Keyword>
+    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">10.0</WindowsTargetPlatformVersion>
+    <QtMsBuild Condition="'$(QtMsBuild)'=='' OR !Exists('$(QtMsBuild)\qt.targets')">$(MSBuildProjectDirectory)\QtMsBuild</QtMsBuild>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt_defaults.props')">
+    <Import Project="$(QtMsBuild)\qt_defaults.props" />
+  </ImportGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
+    <QtInstall>My version Qt</QtInstall>
+    <QtModules>core;gui;widgets</QtModules>
+    <QtBuildConfig>debug</QtBuildConfig>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
+    <QtInstall>My version Qt</QtInstall>
+    <QtModules>core;gui;widgets</QtModules>
+    <QtBuildConfig>release</QtBuildConfig>
+  </PropertyGroup>
+  <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
+    <Message Importance="High" Text="QtMsBuild: could not locate qt.targets, qt.props; project may not build correctly." />
+  </Target>
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(QtMsBuild)\Qt.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(QtMsBuild)\Qt.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
+    <ClCompile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
+    <ClCompile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <QtRcc Include="kursach.qrc" />
+    <QtUic Include="kursach.ui" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\headers\Booking.h" />
+    <ClInclude Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\headers\BookingService.h" />
+    <ClInclude Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\headers\CinemaException.h" />
+    <ClInclude Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\headers\CinemaHall.h" />
+    <ClInclude Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\headers\CinemaSystem.h" />
+    <ClInclude Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\headers\Customer.h" />
+    <ClInclude Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\headers\CustomerService.h" />
+    <ClInclude Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\headers\DateUtils.h" />
+    <ClInclude Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\headers\EmailValidator.h" />
+    <ClInclude Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\headers\MainWindow.h" />
+    <ClInclude Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\headers\Movie.h" />
+    <ClInclude Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\headers\MovieService.h" />
+    <ClInclude Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\headers\Person.h" />
+    <ClInclude Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\headers\PriceFormatter.h" />
+    <ClInclude Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\headers\Session.h" />
+    <ClInclude Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\headers\SessionService.h" />
+    <ClInclude Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\headers\Ticket.h" />
+    <QtMoc Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\headers\SessionDialog.h" />
+    <QtMoc Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\headers\MovieDialog.h" />
+    <QtMoc Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\headers\HallMapDialog.h" />
+    <QtMoc Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\headers\HallDialog.h" />
+    <QtMoc Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\headers\BookingDialog.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\sources\Booking.cpp" />
+    <ClCompile Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\sources\BookingDialog.cpp" />
+    <ClCompile Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\sources\BookingService.cpp" />
+    <ClCompile Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\sources\CinemaHall.cpp" />
+    <ClCompile Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\sources\CinemaSystem.cpp" />
+    <ClCompile Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\sources\Customer.cpp" />
+    <ClCompile Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\sources\CustomerService.cpp" />
+    <ClCompile Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\sources\HallDialog.cpp" />
+    <ClCompile Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\sources\HallMapDialog.cpp" />
+    <ClCompile Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\sources\main.cpp" />
+    <ClCompile Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\sources\MainWindow.cpp" />
+    <ClCompile Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\sources\Movie.cpp" />
+    <ClCompile Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\sources\MovieDialog.cpp" />
+    <ClCompile Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\sources\MovieService.cpp" />
+    <ClCompile Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\sources\Person.cpp" />
+    <ClCompile Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\sources\Session.cpp" />
+    <ClCompile Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\sources\SessionDialog.cpp" />
+    <ClCompile Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\sources\SessionService.cpp" />
+    <ClCompile Include="..\..\..\..\..\Kursach\KursachNew\KursachNew\sources\Ticket.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
+    <Import Project="$(QtMsBuild)\qt.targets" />
+  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
