@@ -28,7 +28,13 @@ jobs:
       # Устанавливаем Build Wrapper
       - name: Install Build Wrapper
         uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v4
-
+        
+      - name: Install Qt Dependencies
+        run: |
+          sudo apt-get update
+          # Устанавливаем необходимые пакеты для сборки Qt-приложений на Linux
+          sudo apt-get install -y qt6-base-dev cmake
+          
       # 1. СБОРКА: Настраиваем CMake и запускаем Build Wrapper
       - name: Run CMake and Build Wrapper
         run: |
