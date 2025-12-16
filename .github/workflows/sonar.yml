@@ -28,20 +28,34 @@ jobs:
         uses: microsoft/setup-msbuild@v2
 
       - name: Download Build Wrapper
-        id: find_wrapper # Добавили ID для сохранения пути
+        id: find_wrapper
         run: |
           $url = "https://sonarcloud.io/static/cpp/build-wrapper-win-x86.zip"
           Write-Host "Downloading Build Wrapper from $url"
           Invoke-WebRequest -Uri $url -OutFile build-wrapper.zip
 
-          # Распаковываем в папку 'bw-temp'
+          # 1. Распаковываем в папку 'bw-temp'
           Expand-Archive -Path build-wrapper.zip -DestinationPath bw-temp -Force
 
-          # ✅ ИСПОЛЬЗУЕМ DIR (более низкоуровневую команду) ДЛЯ ПОИСКА ИСПОЛНЯЕМОГО ФАЙЛА
-          $wrapperPath = dir -Path bw-temp -Recurse -Filter "build-wrapper.exe" | Select-Object -First 1
-          if ($wrapperPath -eq $null) { throw "build-wrapper.exe not found." }
+          # 2. Выводим все содержимое для отладки
+          Write-Host "Listing contents of bw-temp:"
+          Get-ChildItem -Path bw-temp -Recurse | Select-Object FullName
+
+          # 3. ИСПОЛЬЗУЕМ Get-ChildItem С ПОЛНОЙ ПАПКОЙ (самый надежный путь)
+          # Это предполагает, что первая папка называется build-wrapper-win-x86
+          $wrapperPath = Get-ChildItem -Path bw-temp\build-wrapper-win-x86 -Recurse -Filter "build-wrapper.exe" | Select-Object -First 1
+
+          if ($wrapperPath -eq $null) {
+            # Если не найдено, ищем еще раз без указания первой папки (на всякий случай)
+            $wrapperPath = Get-ChildItem -Path bw-temp -Recurse -Filter "build-wrapper.exe" | Select-Object -First 1
+          }
+
+          if ($wrapperPath -eq $null) {
+            throw "build-wrapper.exe not found. Check the output above for file paths."
+          }
 
           # Сохраняем путь для использования в следующем шаге
+          Write-Host "Found wrapper at: $($wrapperPath.FullName)"
           Write-Host "BUILD_WRAPPER_PATH=$($wrapperPath.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
           
       - name: Run Build Wrapper and MSBuild
