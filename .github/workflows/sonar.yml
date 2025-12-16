@@ -60,14 +60,17 @@ jobs:
 
           Write-Host "SUCCESS: Build Wrapper is now at $targetPath"
           Write-Host "BW_PATH=$targetPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-
-          # 2. СКАЧИВАНИЕ И УСТАНОВКА SONAR SCANNER CLI (без изменений)
+          
+          # 2. СКАЧИВАНИЕ И УСТАНОВКА SONAR SCANNER CLI 
           $scanner_url = "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-windows.zip"
           Invoke-WebRequest -Uri $scanner_url -OutFile sonar-scanner.zip
           & "C:\Program Files\7-Zip\7z.exe" x sonar-scanner.zip -o"." -y
-
-          $scannerDir = Get-ChildItem -Path . -Filter "sonar-scanner-cli-*" -Directory | Select-Object -First 1
-          if ($scannerDir -eq $null) { throw "Sonar Scanner directory not found." }
+          
+          # ✅ НОВЫЙ ПОИСК SONAR SCANNER: Ищем папку, содержащую "sonar-scanner-"
+          $scannerDir = Get-ChildItem -Path . -Filter "sonar-scanner-*" -Directory | Select-Object -First 1
+          
+          if ($scannerDir -eq $null) { throw "Sonar Scanner directory not found. Check if the directory name changed." }
+          Write-Host "SUCCESS: Found scanner at $($scannerDir.FullName)"
           Write-Host "SCANNER_PATH=$($scannerDir.FullName)\bin\sonar-scanner.bat" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
       
       # 2. ШАГ СБОРКИ: Запуск Build Wrapper и MSBuild
