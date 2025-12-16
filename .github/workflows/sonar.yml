@@ -63,6 +63,5 @@ jobs:
             -Dsonar.cfamily.build-wrapper-output=${{ env.BUILD_WRAPPER_OUTPUT }}
             -Dsonar.sourceEncoding=UTF-8
             -Dsonar.sources=${{ env.SONAR_SOURCES }}
-            # 💡 ФИНАЛЬНЫЕ АРГУМЕНТЫ ДЛЯ ПРИВЯЗКИ
             -Dsonar.pullrequest.github.repository=${{ github.repository }} 
-            -Dsonar.branch.name=main
+            -Dsonar.branch.name=${{ github.ref_name }}
