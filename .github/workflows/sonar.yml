@@ -10,13 +10,11 @@ on:
 jobs:
   build-and-scan:
     name: SonarCloud Scan
-    # ✅ Ключевое изменение: используем Linux (ubuntu)
     runs-on: ubuntu-latest
-  
+
     env:
       BUILD_DIR: build_sonar
       BUILD_WRAPPER_OUTPUT: bw_output
-      # Указываем Sonar, где искать исходники (корневой каталог)
       SONAR_SOURCES: . 
 
     steps:
@@ -25,37 +23,36 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Устанавливаем Build Wrapper
       - name: Install Build Wrapper
+        # Это действие само устанавливает build-wrapper и делает его доступным в PATH
         uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v4
-        
+
       - name: Install Qt Dependencies
         run: |
           sudo apt-get update
-          # Устанавливаем необходимые пакеты для сборки Qt-приложений на Linux
           sudo apt-get install -y qt6-base-dev cmake
-          
+
       # 1. СБОРКА: Настраиваем CMake и запускаем Build Wrapper
       - name: Run CMake and Build Wrapper
         run: |
           echo "Starting CMake build and wrapping process..."
           rm -rf ${{ env.BUILD_DIR }}
           mkdir -p ${{ env.BUILD_DIR }}
-          
+
           # 1. Настройка CMake
           cmake -S . -B ${{ env.BUILD_DIR }}
-          
+
           # 2. Запуск Build Wrapper для отслеживания сборки
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUTPUT }} cmake --build ${{ env.BUILD_DIR }} --config Release
-          
+
           echo "Build Wrapper successfully created output."
 
-     # 2. АНАЛИЗ: Запуск Sonar Scanner
+      # 2. АНАЛИЗ: Запуск Sonar Scanner
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2.2.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # 💡 ВСТАВЬТЕ СЮДА СВОЙ ТОКЕН ПРОЕКТА:
+          # 💡 ВАЖНО: Токен проекта, который вы получили на SonarCloud
           PROJECT_TOKEN: 35aa0105af98d09b5c5973b5966a0a6e9a03dbf2 
         with:
           args: >
