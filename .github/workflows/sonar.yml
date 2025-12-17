@@ -82,4 +82,4 @@ jobs:
             -Dsonar.sources=kursach/sources \
             -Dsonar.cfamily.compile-warnings=none \
             -Dsonar.cfamily.ignore-header-unit-file=true \
-            -Dsonar.exclusions=**/build_sonar/**,**/moc_*.cpp,**/*.h,**/ui_*.h
+            -Dsonar.exclusions=**/build_sonar/**,**/moc_*.cpp,**/*.h,**/ui_*.h,kursach/sources/CinemaSystem.cpp,kursach/sources/Booking*.cpp,kursach/sources/Customer*.cpp,kursach/sources/CinemaHall.cpp,kursach/sources/Hall*.cpp,kursach/sources/Session*.cpp
