@@ -47,24 +47,24 @@ jobs:
           ls -l ${{ env.BUILD_WRAPPER_OUTPUT }}/compile_commands.json
           echo "Build Wrapper successfully created output."
 
-      # 2. АНАЛИЗ: Установка и запуск SonarScanner CLI
+     # 2. АНАЛИЗ: Установка и запуск SonarScanner CLI
       - name: SonarCloud Scan (Manual CLI)
+        # Мы явно указываем рабочую директорию, чтобы обеспечить правильный путь
+        working-directory: ${{ github.workspace }}
         run: |
           # 1. Скачивание и распаковка SonarScanner CLI
           SONAR_SCANNER_CLI_URL="https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip"
-          SONAR_SCANNER_DIR="sonar-scanner"
+          SONAR_SCANNER_DIR="sonar-scanner-cli"
           
-          mkdir -p ${SONAR_SCANNER_DIR}
+          echo "Скачивание SonarScanner CLI..."
           wget -q -O /tmp/sonarscanner.zip ${SONAR_SCANNER_CLI_URL}
-          unzip -q /tmp/sonarscanner.zip -d ${SONAR_SCANNER_DIR}
           
-          # Находим бинарник (он будет в поддиректории)
-          SONAR_RUNNER=$(find ${SONAR_SCANNER_DIR} -name "sonar-scanner" | head -n 1)
-
-          echo "Scanner found at: ${SONAR_RUNNER}"
+          echo "Распаковка..."
+          unzip -q /tmp/sonarscanner.zip
           
-          # 2. Запуск сканирования
-          ${SONAR_RUNNER} \
+          # 2. Запуск сканирования с ПОЛНЫМ путем
+          # Исполняемый файл находится внутри распакованной папки
+          ./sonar-scanner-cli-5.0.1.3006-linux/bin/sonar-scanner \
             -Dsonar.organization=volkovich81 \
             -Dsonar.projectKey=kursach \
             -Dsonar.token=35aa0105af98d09b5c5973b5966a0a6e9a03dbf2 \
