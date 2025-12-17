@@ -44,7 +44,7 @@ jobs:
 
           # 2. Запуск Build Wrapper для отслеживания сборки
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUTPUT }} cmake --build ${{ env.BUILD_DIR }} --config Release
-
+          ls -l ${{ env.BUILD_WRAPPER_OUTPUT }}/compile_commands.json
           echo "Build Wrapper successfully created output."
 
       # 2. АНАЛИЗ: Запуск Sonar Scanner
