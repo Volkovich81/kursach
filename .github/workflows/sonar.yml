@@ -52,7 +52,6 @@ jobs:
         uses: SonarSource/sonarcloud-github-action@v2.2.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # 💡 ВАЖНО: Токен проекта, который вы получили на SonarCloud
           PROJECT_TOKEN: 35aa0105af98d09b5c5973b5966a0a6e9a03dbf2 
         with:
           args: >
@@ -64,3 +63,5 @@ jobs:
             -Dsonar.branch.name=main
             -Dsonar.branch.type=long
             -Dsonar.token=${{ env.PROJECT_TOKEN }}
+            # 💡 НОВОЕ ИСПРАВЛЕНИЕ: ОТКЛЮЧАЕМ ПРОВЕРКУ ALM
+            -Dsonar.scm.disabled=true
