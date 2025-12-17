@@ -47,24 +47,33 @@ jobs:
           ls -l ${{ env.BUILD_WRAPPER_OUTPUT }}/compile_commands.json
           echo "Build Wrapper successfully created output."
 
-     # 2. АНАЛИЗ: Установка и запуск SonarScanner CLI
-      - name: SonarCloud Scan (Manual CLI)
-        # Мы явно указываем рабочую директорию, чтобы обеспечить правильный путь
+    # 2. АНАЛИЗ: Установка и запуск SonarScanner CLI (Надежный поиск)
+      - name: SonarCloud Scan (Manual CLI - Final Fix)
+        # Мы явно указываем рабочую директорию, чтобы гарантировать, что поиск идет из корня
         working-directory: ${{ github.workspace }}
         run: |
+          echo "Старт финального этапа: Установка и запуск SonarScanner CLI."
+          
           # 1. Скачивание и распаковка SonarScanner CLI
           SONAR_SCANNER_CLI_URL="https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip"
-          SONAR_SCANNER_DIR="sonar-scanner-cli"
           
-          echo "Скачивание SonarScanner CLI..."
           wget -q -O /tmp/sonarscanner.zip ${SONAR_SCANNER_CLI_URL}
+          unzip -q /tmp/sonarscanner.zip -d . # Распаковываем в текущую директорию
           
-          echo "Распаковка..."
-          unzip -q /tmp/sonarscanner.zip
+          # 2. Надежный поиск исполняемого файла sonar-scanner
+          # Находим бинарник в любой глубине, добавляем права на выполнение и сохраняем путь.
+          SONAR_RUNNER=$(find . -type f -name "sonar-scanner" | head -n 1)
           
-          # 2. Запуск сканирования с ПОЛНЫМ путем
-          # Исполняемый файл находится внутри распакованной папки
-          ./sonar-scanner-cli-5.0.1.3006-linux/bin/sonar-scanner \
+          if [ -z "$SONAR_RUNNER" ]; then
+            echo "Критическая ошибка: sonar-scanner не найден после распаковки."
+            exit 1
+          fi
+          
+          chmod +x "$SONAR_RUNNER"
+          echo "Исполняемый файл найден и путь установлен: $SONAR_RUNNER"
+
+          # 3. Запуск сканирования
+          "$SONAR_RUNNER" \
             -Dsonar.organization=volkovich81 \
             -Dsonar.projectKey=kursach \
             -Dsonar.token=35aa0105af98d09b5c5973b5966a0a6e9a03dbf2 \
