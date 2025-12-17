@@ -47,21 +47,28 @@ jobs:
           ls -l ${{ env.BUILD_WRAPPER_OUTPUT }}/compile_commands.json
           echo "Build Wrapper successfully created output."
 
-      # 2. АНАЛИЗ: Запуск Sonar Scanner
-      - name: SonarCloud Scan CLI
-        uses: SonarSource/sonarcloud-github-action@v4
-        env:
-         # Токен проекта, который вы получили ранее
-          SONAR_TOKEN: 35aa0105af98d09b5c5973b5966a0a6e9a03dbf2 
-          # Хост SonarCloud
-          SONAR_HOST_URL: https://sonarcloud.io
-        with:
-          args: >
-            -Dsonar.organization=volkovich81 
-            -Dsonar.projectKey=kursach
-            -Dsonar.cfamily.build-wrapper-output=${{ env.BUILD_WRAPPER_OUTPUT }}
-            -Dsonar.sourceEncoding=UTF-8
-            -Dsonar.sources=${{ env.SONAR_SOURCES }}
-            -Dsonar.branch.name=main
-            -Dsonar.branch.type=long
+      # 2. АНАЛИЗ: Установка и запуск SonarScanner CLI
+      - name: SonarCloud Scan (Manual CLI)
+        run: |
+          # 1. Скачивание и распаковка SonarScanner CLI
+          SONAR_SCANNER_CLI_URL="https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip"
+          SONAR_SCANNER_DIR="sonar-scanner"
+          
+          mkdir -p ${SONAR_SCANNER_DIR}
+          wget -q -O /tmp/sonarscanner.zip ${SONAR_SCANNER_CLI_URL}
+          unzip -q /tmp/sonarscanner.zip -d ${SONAR_SCANNER_DIR}
+          
+          # Находим бинарник (он будет в поддиректории)
+          SONAR_RUNNER=$(find ${SONAR_SCANNER_DIR} -name "sonar-scanner" | head -n 1)
+
+          echo "Scanner found at: ${SONAR_RUNNER}"
+          
+          # 2. Запуск сканирования
+          ${SONAR_RUNNER} \
+            -Dsonar.organization=volkovich81 \
+            -Dsonar.projectKey=kursach \
+            -Dsonar.token=35aa0105af98d09b5c5973b5966a0a6e9a03dbf2 \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.cfamily.build-wrapper-output=${{ env.BUILD_WRAPPER_OUTPUT }} \
+            -Dsonar.sources=${{ env.SONAR_SOURCES }} \
             -Dsonar.scm.disabled=true
