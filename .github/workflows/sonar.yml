@@ -48,11 +48,13 @@ jobs:
           echo "Build Wrapper successfully created output."
 
       # 2. АНАЛИЗ: Запуск Sonar Scanner
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v2.2.0
+      - name: SonarCloud Scan CLI
+        uses: SonarSource/sonarcloud-github-action@v4
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PROJECT_TOKEN: 35aa0105af98d09b5c5973b5966a0a6e9a03dbf2 
+         # Токен проекта, который вы получили ранее
+          SONAR_TOKEN: 35aa0105af98d09b5c5973b5966a0a6e9a03dbf2 
+          # Хост SonarCloud
+          SONAR_HOST_URL: https://sonarcloud.io
         with:
           args: >
             -Dsonar.organization=volkovich81 
@@ -62,6 +64,4 @@ jobs:
             -Dsonar.sources=${{ env.SONAR_SOURCES }}
             -Dsonar.branch.name=main
             -Dsonar.branch.type=long
-            -Dsonar.token=${{ env.PROJECT_TOKEN }}
-            # 💡 НОВОЕ ИСПРАВЛЕНИЕ: ОТКЛЮЧАЕМ ПРОВЕРКУ ALM
             -Dsonar.scm.disabled=true
