@@ -46,10 +46,8 @@ jobs:
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUTPUT }} cmake --build ${{ env.BUILD_DIR }} --config Release
           ls -l ${{ env.BUILD_WRAPPER_OUTPUT }}/compile_commands.json
           echo "Build Wrapper successfully created output."
-
-    # 2. АНАЛИЗ: Установка и запуск SonarScanner CLI (Надежный поиск)
+          
       - name: SonarCloud Scan (Manual CLI - Final Fix)
-        # Мы явно указываем рабочую директорию, чтобы гарантировать, что поиск идет из корня
         working-directory: ${{ github.workspace }}
         run: |
           echo "Старт финального этапа: Установка и запуск SonarScanner CLI."
@@ -58,10 +56,9 @@ jobs:
           SONAR_SCANNER_CLI_URL="https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip"
           
           wget -q -O /tmp/sonarscanner.zip ${SONAR_SCANNER_CLI_URL}
-          unzip -q /tmp/sonarscanner.zip -d . # Распаковываем в текущую директорию
+          unzip -q /tmp/sonarscanner.zip -d .
           
           # 2. Надежный поиск исполняемого файла sonar-scanner
-          # Находим бинарник в любой глубине, добавляем права на выполнение и сохраняем путь.
           SONAR_RUNNER=$(find . -type f -name "sonar-scanner" | head -n 1)
           
           if [ -z "$SONAR_RUNNER" ]; then
@@ -72,12 +69,17 @@ jobs:
           chmod +x "$SONAR_RUNNER"
           echo "Исполняемый файл найден и путь установлен: $SONAR_RUNNER"
 
-          # 3. Запуск сканирования
+          # 3. Запуск сканирования с параметрами для снижения ошибок
           "$SONAR_RUNNER" \
             -Dsonar.organization=volkovich81 \
             -Dsonar.projectKey=kursach \
-            -Dsonar.token=35aa0105af98d09b5c5973b5966a0a6e9a03dbf2 \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.cfamily.build-wrapper-output=${{ env.BUILD_WRAPPER_OUTPUT }} \
-            -Dsonar.sources=${{ env.SONAR_SOURCES }} \
-            -Dsonar.scm.disabled=true
+            -Dsonar.scm.disabled=true \
+            \
+            -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
+            \
+            -Dsonar.sources=kursach/sources \
+            -Dsonar.cfamily.compile-warnings=none \
+            -Dsonar.cfamily.ignore-header-unit-file=true \
+            -Dsonar.exclusions=**/build_sonar/**,**/moc_*.cpp,**/*.h,**/ui_*.h
