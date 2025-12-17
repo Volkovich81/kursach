@@ -50,19 +50,20 @@ jobs:
           
           echo "Build Wrapper successfully created output."
 
-     # 2. АНАЛИЗ: Запуск Sonar Scanner (ЧИСТЫЙ РУЧНОЙ РЕЖИМ)
+     # 2. АНАЛИЗ: Запуск Sonar Scanner
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2.2.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          # 💡 ВСТАВЬТЕ СЮДА СВОЙ ТОКЕН ПРОЕКТА:
+          PROJECT_TOKEN: 35aa0105af98d09b5c5973b5966a0a6e9a03dbf2 
         with:
           args: >
-            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+            -Dsonar.organization=volkovich81 
             -Dsonar.projectKey=kursach
             -Dsonar.cfamily.build-wrapper-output=${{ env.BUILD_WRAPPER_OUTPUT }}
             -Dsonar.sourceEncoding=UTF-8
             -Dsonar.sources=${{ env.SONAR_SOURCES }}
-            # 💡 НОВЫЕ ПАРАМЕТРЫ: Явно указываем, что ветка - основная
             -Dsonar.branch.name=main
             -Dsonar.branch.type=long
+            -Dsonar.token=${{ env.PROJECT_TOKEN }}
